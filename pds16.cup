@@ -1,0 +1,358 @@
+import java_cup.runtime.*;
+   
+parser code {:
+    
+    public void report_error(String message, Object info) {
+   
+		StringBuilder m = new StringBuilder("Error");
+	   
+		if (info instanceof java_cup.runtime.Symbol) {
+			java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+	   
+			if (s.left >= 0) {                
+			m.append(" in line "+(s.left + 1));   
+			if (s.right >= 0)                    
+				m.append(", column "+(s.right + 1));
+			}
+		}
+
+		m.append(" : " + message);
+
+		System.err.println(m);
+    }
+   
+    public void report_fatal_error(String message, Object info) {
+		report_error(message, info);
+		System.exit(1);
+    }
+:};
+
+terminal 			LOW, HIGH;
+terminal			DOT, EQUAL, EQUAL_EQUAL, NOT_EQUAL, LESSER, GREATER, LESSER_EQUAL, GREATER_EQUAL;
+terminal			SHIFT_LEFT, SHIFT_RIGHT;
+terminal			COLON, SEMICOLON, COMMA, AMPERSAND, PIPE, CIRCUMFLEX;
+terminal			TILDE, AMPERSAND_AMPERSAND, PIPE_PIPE, EXCLAMATION, QUESTION, CARDINAL;
+terminal			PLUS, MINUS, ASTERISK, SLASH, PERCENT;
+terminal			PARENTHESE_LEFT, PARENTHESE_RIGHT, BRACKET_LEFT, BRACKET_RIGHT;
+
+terminal			ORG, END, SECTION, EQU, TEXT, DATA, BYTE, WORD, SPACE, ASCII;
+terminal Integer	INTEGER_LITERAL;
+terminal 			IDENTIFIER, STRING_LITERAL, CHARACTER_LITERAL;
+terminal			REGISTER;
+terminal			LABEL;
+
+
+non terminal Object string_list, value_list, directive, instruction, program;
+
+non terminal primary_expression, unary_expression, multiplicative_expression,
+			additive_expression, shift_expression, relational_expression,
+			equality_expression, and_expression, exclusive_or_expression,
+			inclusive_or_expression, logical_and_expression,
+			logical_or_expression, conditional_expression, expression;
+
+
+terminal LDI, LD, ST, ADD, ADC, SUB, SBB, AND, OR, XOR, NOT, SHL, SHR, RR, RC,
+	MOV, INC, DEC, JZ, JNZ, JC, JNC, JMP, RET, IRET, NOP;
+
+non terminal
+	instruction_ldi,
+	instruction_ld,
+	instruction_st,
+	instruction_add,
+	instruction_adc,
+	instruction_sub,
+	instruction_sbb,
+	instruction_and,
+	instruction_or,
+	instruction_xor,
+	instruction_not,
+	instruction_shl,
+	instruction_shr,
+	instruction_rr,
+	instruction_rc,
+	instruction_mov,
+	instruction_inc,
+	instruction_dec,
+	instruction_jz,
+	instruction_jnz,
+	instruction_jc,
+	instruction_jnc,
+	instruction_jmp,
+	instruction_ret,
+	instruction_iret,
+	instruction_nop;
+
+program
+	::=	LABEL
+	|	instruction
+	|	directive
+	|	directive program
+	|	LABEL program
+	|	instruction program
+	;
+
+/*----------------------------------------------------------------------------*/
+
+instruction
+	::=	instruction_ldi
+	|	instruction_ld
+	|	instruction_st
+	|	instruction_add
+	|	instruction_adc
+	|	instruction_sub
+	|	instruction_sbb
+	|	instruction_and
+	|	instruction_or
+	|	instruction_xor
+	|	instruction_not
+	|	instruction_shl
+	|	instruction_shr
+	|	instruction_rr
+	|	instruction_rc
+	|	instruction_mov
+	|	instruction_inc
+	|	instruction_dec
+	|	instruction_jz
+	|	instruction_jnz
+	|	instruction_jc
+	|	instruction_jnc
+	|	instruction_jmp
+	|	instruction_ret
+	|	instruction_iret
+	|	instruction_nop
+	;
+
+instruction_ldi
+	::=	LDI REGISTER COMMA CARDINAL expression
+	;
+
+instruction_ld
+	::=	LD REGISTER COMMA expression
+	|	LD REGISTER COMMA BRACKET_LEFT REGISTER COMMA CARDINAL expression BRACKET_RIGHT
+	|	LD REGISTER COMMA BRACKET_LEFT REGISTER COMMA REGISTER BRACKET_RIGHT
+	;
+
+instruction_st
+	::=	ST REGISTER COMMA expression
+	|	ST REGISTER COMMA BRACKET_LEFT REGISTER COMMA CARDINAL expression BRACKET_RIGHT
+	|	ST REGISTER COMMA BRACKET_LEFT REGISTER COMMA REGISTER BRACKET_RIGHT
+	;
+
+instruction_add
+	::=	ADD REGISTER COMMA REGISTER COMMA REGISTER
+	|	ADD REGISTER COMMA REGISTER COMMA CARDINAL expression
+	;
+
+instruction_adc
+	::=	ADC REGISTER COMMA REGISTER COMMA REGISTER
+	|	ADC REGISTER COMMA REGISTER COMMA CARDINAL expression
+	;
+
+instruction_sub
+	::=	SUB REGISTER COMMA REGISTER COMMA REGISTER
+	|	SUB REGISTER COMMA REGISTER COMMA CARDINAL expression
+	;
+
+instruction_sbb
+	::=	SBB REGISTER COMMA REGISTER COMMA REGISTER
+	|	SBB REGISTER COMMA REGISTER COMMA CARDINAL expression
+	;
+
+instruction_and
+	::=	AND REGISTER COMMA REGISTER COMMA REGISTER
+	;
+
+instruction_or
+	::=	OR REGISTER COMMA REGISTER COMMA REGISTER
+	;
+
+instruction_xor
+	::=	XOR REGISTER COMMA REGISTER COMMA REGISTER
+	;
+
+instruction_not
+	::=	NOT REGISTER COMMA REGISTER
+	;
+
+instruction_shl
+	::=	SHL REGISTER COMMA REGISTER COMMA CARDINAL expression COMMA expression
+	;
+
+instruction_shr
+	::=	SHR REGISTER COMMA REGISTER COMMA CARDINAL expression COMMA expression
+	;
+
+instruction_rr
+	::=	RR REGISTER COMMA REGISTER COMMA CARDINAL expression
+	;
+
+instruction_rc
+	::=	RC REGISTER COMMA REGISTER
+	;
+
+instruction_mov
+	::=	MOV REGISTER COMMA REGISTER
+	;
+
+
+instruction_inc
+	::=	INC REGISTER
+	;
+
+
+instruction_dec
+	::=	DEC REGISTER
+	;
+
+
+instruction_jz
+	::=	JZ IDENTIFIER
+	|	JZ REGISTER COMMA CARDINAL expression
+	;
+
+instruction_jnz
+	::=	JNZ IDENTIFIER
+	|	JNZ REGISTER COMMA CARDINAL expression
+	;
+
+instruction_jc
+	::=	JC IDENTIFIER
+	|	JC REGISTER COMMA CARDINAL expression
+	;
+
+instruction_jnc
+	::=	JNC IDENTIFIER
+	|	JNC REGISTER COMMA CARDINAL expression
+	;
+
+instruction_jmp
+	::=	JMP IDENTIFIER
+	|	JMP REGISTER COMMA CARDINAL expression
+	;
+
+instruction_ret
+	::=	RET
+	;
+
+instruction_iret
+	::=	IRET
+	;
+
+instruction_nop
+	::=	NOP
+	;
+
+/*----------------------------------------------------------------------------*/
+
+primary_expression
+	::=	INTEGER_LITERAL
+	|	CHARACTER_LITERAL
+	|	IDENTIFIER
+	|	PARENTHESE_LEFT expression PARENTHESE_RIGHT
+	;
+
+unary_expression
+	::= primary_expression
+	|	PLUS primary_expression
+	|	MINUS primary_expression
+	|	TILDE primary_expression
+	|	LOW primary_expression
+	|	HIGH primary_expression
+	;
+
+multiplicative_expression
+	::=	unary_expression
+	|	multiplicative_expression ASTERISK unary_expression
+	|	multiplicative_expression SLASH unary_expression
+	|	multiplicative_expression PERCENT unary_expression
+	;
+
+additive_expression
+	::=	multiplicative_expression
+	|	additive_expression PLUS multiplicative_expression
+	|	additive_expression MINUS multiplicative_expression
+	;
+
+shift_expression
+	::= additive_expression
+	|	shift_expression SHIFT_LEFT additive_expression
+	|	shift_expression SHIFT_RIGHT additive_expression
+	;
+
+
+relational_expression
+	::=	shift_expression
+	|	relational_expression LESSER shift_expression
+	|	relational_expression GREATER shift_expression
+	|	relational_expression LESSER_EQUAL shift_expression
+	|	relational_expression GREATER_EQUAL shift_expression
+	;
+
+equality_expression
+	::=	relational_expression
+	|	equality_expression EQUAL_EQUAL relational_expression
+	|	equality_expression NOT_EQUAL relational_expression
+	;
+		    
+and_expression
+	::=	equality_expression
+	|	and_expression:ae AMPERSAND equality_expression
+	       ;
+
+exclusive_or_expression
+	::=	and_expression
+	| exclusive_or_expression CIRCUMFLEX and_expression
+	;
+
+inclusive_or_expression
+	::= exclusive_or_expression
+	| inclusive_or_expression PIPE exclusive_or_expression
+	;
+
+logical_and_expression
+	::=	inclusive_or_expression
+	|	logical_and_expression AMPERSAND_AMPERSAND inclusive_or_expression
+	;
+
+logical_or_expression
+	::=	logical_and_expression
+	|	logical_or_expression PIPE_PIPE logical_and_expression
+	;
+	 
+conditional_expression
+	::=	logical_or_expression
+	|	logical_or_expression QUESTION expression COLON conditional_expression
+	;
+
+expression
+	::=	conditional_expression
+	;
+       
+value_list
+	::=	value_list COMMA expression
+	|	expression
+	;
+	
+string_list
+	::=	string_list COMMA STRING_LITERAL
+	|	STRING_LITERAL
+	;
+	
+directive
+	::=	DOT SECTION IDENTIFIER
+	|	DOT SECTION TEXT
+	|	DOT SECTION DATA
+	|	DOT TEXT
+	|	DOT DATA
+	|	DOT EQU IDENTIFIER COMMA INTEGER_LITERAL
+	|	DOT BYTE
+	|	DOT WORD
+	|	DOT BYTE value_list 
+	|	DOT WORD value_list
+	|	DOT ORG expression
+	|	DOT SPACE expression
+	|	DOT SPACE expression COMMA expression
+	|	DOT ASCII string_list
+	|	DOT END
+	;
+
